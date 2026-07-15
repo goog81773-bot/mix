@@ -1,0 +1,13 @@
+{
+  "name": "chat-yemen",
+  "version": "2.0.0",
+  "description": "شات اليمن - للتعارف والدردشة الفاخرة",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
