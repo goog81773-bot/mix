@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شات اليمن 🇾🇪</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU2hhdCBZZW1lbiIsInNob3J0X25hbWUiOiJDaGF0Iiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMwZjAyMWEiLCJ0aGVtZV9jb2xvciI6IiNmZjJkNTUifQ==">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+    * { font-family: 'Cairo', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: linear-gradient(135deg, #05021a 0%, #1a0f33 100%); min-height: 100vh; color: white; }
+    .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,45,85,0.2); border-radius: 16px; }
+    .btn-main { background: linear-gradient(135deg, #ff2d55, #c41850); transition: all 0.3s; }
+    .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,45,85,0.35); }
+    .msg { background: rgba(255,45,85,0.1); border-right: 3px solid #ff2d55; border-radius: 12px; margin: 6px 0; padding: 10px 14px; }
+    .msg.own { background: rgba(48,209,88,0.1); border-right-color: #30d158; }
+    .pwa-btn { position: fixed; bottom: 20px; left: 20px; z-index: 99; display: none; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 999; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
+    .tab-btn.active { background: #ff2d55; color: white; }
+  </style>
+</head>
+<body>
+
+  <!-- زر التثبيت -->
+  <button id="installBtn" class="pwa-btn glass px-4 py-2 rounded-full text-sm font-bold flex gap-2 items-center">
+    <i class="fa fa-download"></i> تثبيت كتطبيق
+  </button>
+
+  <!-- شاشة الدخول -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="glass p-8 w-full max-w-md text-center">
+      <h1 class="text-4xl font-black mb-2 bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent">شات اليمن 🇾🇪</h1>
+      <p class="text-gray-400 mb-6">مساحة التعارف الراقية</p>
+      <input type="text" id="username" placeholder="أدخل اسمك المستعار" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mb-4 text-center">
+      <button onclick="login()" class="btn-main w-full py-3 rounded-xl font-bold">دخول إلى الدردشة</button>
+    </div>
+  </div>
+
+  <!-- الشاشة الرئيسية -->
+  <div id="mainScreen" class="hidden p-3 max-w-6xl mx-auto">
+    <div class="glass p-3 mb-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="font-bold" id="myName">الاسم</span>
+        <span class="text-yellow-400 text-sm"><i class="fa fa-coins"></i> <span id="myCoins">0</span></span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="openModal('purchaseModal')" class="text-sm px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg">شراء خدمات</button>
+        <button onclick="openModal('supportModal')" class="text-sm px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg">الدعم</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- القائمة الجانبية -->
+      <div class="glass p-3">
+        <div class="flex gap-2 mb-3">
+          <button class="tab-btn active px-3 py-1 rounded-lg text-sm" onclick="switchTab('rooms')">الغرف</button>
+          <button class="tab-btn px-3 py-1 rounded-lg text-sm" onclick="switchTab('private')">خاص</button>
+        </div>
+
+        <div id="roomsTab">
+          <button onclick="openModal('newRoomModal')" class="w-full text-sm py-2 mb-3 border border-dashed border-white/20 rounded-lg hover:border-rose-500">+ إنشاء غرفة جديدة</button>
+          <div id="roomsList" class="space-y-2 text-sm"></div>
+        </div>
+
+        <div id="privateTab" class="hidden space-y-2 text-sm">
+          <input type="text" id="privateUser" placeholder="اسم المستخدم" class="w-full text-sm bg-white/5 border rounded-lg px-2 py-1">
+          <button onclick="startPrivate()" class="w-full btn-main text-sm py-2 rounded-lg">بدء محادثة خاصة</button>
+        </div>
+      </div>
+
+      <!-- منطقة الدردشة -->
+      <div class="md:col-span-3 glass p-4 flex flex-col h-[80vh]">
+        <h3 id="roomTitle" class="font-bold text-lg mb-3 border-b border-white/10 pb-2">الساحة العامة</h3>
+        <div id="messagesBox" class="flex-1 overflow-y-auto space-y-1 pr-1 mb-3"></div>
+        
+        <div class="flex gap-2">
+          <button onclick="sendRose()" class="text-xl px-2">🌹</button>
+          <input type="text" id="msgInput" placeholder="اكتب رسالتك..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3" onkeydown="if(event.key==='Enter')sendMsg()">
+          <button onclick="sendMsg()" class="btn-main px-5 rounded-xl font-bold"><i class="fa fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- النوافذ المنبثقة -->
+  <div id="newRoomModal" class="modal">
+    <div class="glass p-6 w-full max-w-sm">
+      <h3 class="text-xl font-bold mb-4">إنشاء غرفة جديدة</h3>
+      <input type="text" id="roomName" placeholder="اسم الغرفة" class="w-full mb-3 bg-white/5 border rounded-lg px-3 py-2">
+      <select id="roomType" class="w-full mb-4 bg-white/5 border rounded-lg px-3 py-2">
+        <option value="text">غرفة نصية</option>
+        <option value="voice">غرفة صوتية</option>
+      </select>
+      <div class="flex gap-2">
+        <button onclick="createRoom()" class="btn-main flex-1 py-2 rounded-lg">إنشاء</button>
+        <button onclick="closeModal('newRoomModal')" class="flex-1 bg-gray-700 rounded-lg">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="purchaseModal" class="modal">
+    <div class="glass p-6 w-full max-w-sm">
+      <h3 class="text-xl font-bold mb-4">طلب شراء خدمات</h3>
+      <input type="text" id="buyerName" placeholder="الاسم الكامل" class="w-full mb-3 bg-white/5 border rounded-lg px-3 py-2">
+      <input type="text" id="buyerContact" placeholder="رقم التواصل" class="w-full mb-3 bg-white/5 border rounded-lg px-3 py-2">
+      <textarea id="buyItem" placeholder="الخدمة أو الباقة المطلوبة" rows="3" class="w-full mb-4 bg-white/5 border rounded-lg px-3 py-2"></textarea>
+      <div class="flex gap-2">
+        <button onclick="submitPurchase()" class="btn-main flex-1 py-2 rounded-lg">إرسال الطلب</button>
+        <button onclick="closeModal('purchaseModal')" class="flex-1 bg-gray-700 rounded-lg">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="supportModal" class="modal">
+    <div class="glass p-6 w-full max-w-md">
+      <h3 class="text-xl font-bold mb-4">محادثة الدعم الفني</h3>
+      <div id="supportChat" class="h-48 overflow-y-auto mb-3 bg-black/20 rounded-lg p-2 text-sm"></div>
+      <div class="flex gap-2">
+        <input type="text" id="supportMsg" placeholder="اكتب رسالتك..." class="flex-1 bg-white/5 border rounded-lg px-3 py-2">
+        <button onclick="sendSupportMsg()" class="btn-main px-4 rounded-lg">إرسال</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentUser = null;
+    let currentRoom = 'general';
+    let deferredPrompt;
+
+    // نظام التثبيت كتطبيق
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBtn').style.display = 'flex';
+    });
+    document.getElementById('installBtn').addEventListener('click', async () => {
+      if(deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if(outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
+        deferredPrompt = null;
+      }
+    });
+
+    function login() {
+      const name = document.getElementById('username').value.trim();
+      if(!name) return alert('أدخل اسمك أولاً');
+      socket.emit('register-user', { username: name });
+    }
+
+    socket.on('login-success', (data) => {
+      currentUser = data.user;
+      document.getElementById('myName').textContent = currentUser.username;
+      document.getElementById('myCoins').textContent = currentUser.coins;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainScreen').classList.remove('hidden');
+      data.rooms.forEach(r => addRoomToList(r));
+      joinRoom('general');
+    });
+
+    function addRoomToList(room) {
+      const list = document.getElementById('roomsList');
+      const item = document.createElement('div');
+      item.className = 'p-2 rounded-lg hover:bg-white/5 cursor-pointer flex justify-between';
+      item.innerHTML = `<span>${room.type==='voice'?'🎤':'💬'} ${room.name}</span>`;
+      item.onclick = () => joinRoom(room.id);
+      list.appendChild(item);
+    }
+
+    function joinRoom(id) {
+      currentRoom = id;
+      socket.emit('join-room', id);
+    }
+
+    socket.on('room-joined', (room) => {
+      document.getElementById('roomTitle').textContent = room.name;
+      document.getElementById('messagesBox').innerHTML = '';
+      room.messages.forEach(m => addMessage(m));
+    });
+
+    function sendMsg() {
+      const txt = document.getElementById('msgInput').value.trim();
+      if(!txt) return;
+      socket.emit('send-message', { roomId: currentRoom, text: txt });
+      document.getElementById('msgInput').value = '';
+    }
+
+    socket.on('new-message', (msg) => {
+      addMessage(msg);
+    });
+
+    function addMessage(msg) {
+      const box = document.getElementById('messagesBox');
+      const div = document.createElement('div');
+      div.className = `msg ${msg.user===currentUser.username?'own':''}`;
+      div.innerHTML = `<div class="text-xs text-gray-400 mb-1">${msg.user} ⋅ ${msg.time}</div>${msg.text}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function sendRose() {
+      if(!confirm('إرسال وردة ب 5 عملات؟ 🌹')) return;
+      const target = prompt('اسم المرسل إليه:');
+      if(target) socket.emit('send-rose', target);
+    }
+
+    socket.on('rose-received', (from) => {
+      alert(`وصلتك وردة من ${from} 🌹`);
+    });
+
+    socket.on('notify', (msg) => alert(msg));
+
+    function createRoom() {
+      socket.emit('create-room', {
+        name: document.getElementById('roomName').value,
+        type: document.getElementById('roomType').value
+      });
+      closeModal('newRoomModal');
+    }
+
+    socket.on('room-created', (room) => addRoomToList(room));
+
+    function startPrivate() {
+      const user = document.getElementById('privateUser').value.trim();
+      if(user) socket.emit('send-private', { toUser: user, text: 'أهلاً بك 👋' });
+    }
+
+    socket.on('private-message', (data) => {
+      addMessage({ user: data.from, text: `(خاص) ${data.text}`, time: new Date().toLocaleTimeString('ar-SA') });
+    });
+
+    function submitPurchase() {
+      socket.emit('submit-purchase', {
+        name: document.getElementById('buyerName').value,
+        contact: document.getElementById('buyerContact').value,
+        item: document.getElementById('buyItem').value
+      });
+      closeModal('purchaseModal');
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('roomsTab').classList.toggle('hidden', tab!=='rooms');
+      document.getElementById('privateTab').classList.toggle('hidden', tab!=='private');
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+    function sendSupportMsg() {
+      const txt = document.getElementById('supportMsg').value.trim();
+      if(!txt) return;
+      const box = document.getElementById('supportChat');
+      box.innerHTML += `<div class="text-right mb-1">أنت: ${txt}</div>`;
+      setTimeout(() => {
+        box.innerHTML += `<div class="text-left text-blue-400 mb-1">الدعم: تم استلام رسالتك، سنتواصل معك قريباً ✅</div>`;
+        box.scrollTop = box.scrollHeight;
+      }, 800);
+      document.getElementById('supportMsg').value = '';
+    }
+  </script>
+</body>
+</html>
